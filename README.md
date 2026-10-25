@@ -1,20 +1,44 @@
-# Greenfield Smart Academy – 3D Smart School Attendance Digital Twin
+# 🏫 BLE Beacon Indoor Location Tracking — 3D Simulation
 
-An integrated 3D Smart School BLE Beacon Indoor Location Tracking and Period-Based Attendance Simulation built with **Three.js**, **Vanilla JavaScript**, and **Modern CSS**.
+An interactive 3D campus simulation that demonstrates BLE Beacon-based indoor positioning, student movement tracking, RSSI signal monitoring, and student attendance visualization.
 
-## 🚀 Quick Start
-we deployed using vercel
-kindly access using this link
+## 🚀 Live Demo
 
+### 👉 [**Click Here to Open the Live 3D Simulation**](https://ble-beacon-tracker-3d-ble-beacon-tr.vercel.app/)
 
-ble-beacon-tracker-3d-ble-beacon-tr.vercel.app
+Explore the interactive campus environment and experience the 3D indoor tracking simulation directly in your browser.
 
-1. Open `ble-beacon-tracker/index.html` in any web browser.
-2. Or run locally:
-   ```bash
-   cd ble-beacon-tracker
-   npx http-server . -p 8080 -c-1
-   # Open http://localhost:8080/
-   ```
+## ✨ Features
 
-For full documentation, architecture details, and verification test suite instructions, see [ble-beacon-tracker/README.md](ble-beacon-tracker/README.md).
+- 🏢 Interactive 3D campus environment
+- 📡 BLE Beacon-based indoor positioning
+- 📶 RSSI signal strength monitoring
+- 📍 True position and estimated position visualization
+- 🧭 Student movement trails and tracking
+- 🎓 Student attendance dashboard
+- 📊 Live attendance statistics
+- 🎛️ Interactive simulation controls
+- 🏫 Classroom and campus visualization
+
+## 🛠️ Technologies Used
+
+- HTML5
+- CSS3
+- JavaScript
+- 3D visualization technologies
+- BLE Beacon and RSSI simulation
+
+## 🎯 Project Objective
+
+To demonstrate how BLE Beacon technology can support indoor location tracking and visualize student positions and attendance within a campus environment.
+
+## 🌐 Deployment
+
+**Platform:** Vercel
+
+**Live Website:** https://ble-beacon-tracker-3d-ble-beacon-tr.vercel.app/
+
+## 👩‍💻 Developer
+
+**Ranjini K.**
+
