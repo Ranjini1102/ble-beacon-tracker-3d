@@ -102,7 +102,39 @@
               <button data-shot="CORR" onclick="SchoolScene.enterFPS('CORR')">🚶 Walk</button>
             </div>
             <button id="enter-fps-btn" class="fps-enter-btn">🚶 Walk School (FPS)</button>
+            <button id="launch-tour-btn" onclick="SchoolPresenter.startTour()" class="fps-enter-btn tour-top-btn">🎙 Guided Tour</button>
           </div>
+
+          <!-- Interactive Guided Tour Floating Controls Dock -->
+          <div class="tour-dock" id="tour-dock" style="display: none;">
+            <div class="tour-top-row">
+              <div class="tour-status-wrap">
+                <div class="tour-pill" id="tour-badge">Stop 1 of 16 · Campus Welcome</div>
+                <div class="tour-stop-title" id="tour-title">Main School Entrance</div>
+              </div>
+              <div class="tour-btn-group">
+                <button class="tour-btn primary" id="tour-pause-btn" title="Pause or Resume Tour">⏸ Pause</button>
+                <button class="tour-btn" id="tour-prev-btn" title="Previous Room / Stop">⏮ Prev</button>
+                <button class="tour-btn" id="tour-next-btn" title="Next Room / Stop">⏭ Next</button>
+                <button class="tour-btn" id="tour-restart-btn" title="Restart Guided Tour">🔄 Restart</button>
+                <button class="tour-btn danger" id="tour-exit-btn" title="Exit Guided Tour">✕ Exit Tour</button>
+              </div>
+            </div>
+            <!-- Sub-controls: Progress, Subtitles, Voice, Camera Follow -->
+            <div class="tour-sub-row">
+              <div class="tour-progress-track">
+                <div class="tour-progress-fill" id="tour-progress-bar" style="width: 6.25%;"></div>
+              </div>
+              <div class="tour-toggles">
+                <button class="tour-toggle-btn active" id="tour-sub-btn" title="Toggle On-Screen Subtitles">💬 Subtitles</button>
+                <button class="tour-toggle-btn active" id="tour-voice-btn" title="Toggle Audio Voice-Over">🔊 Voice-Over</button>
+                <button class="tour-toggle-btn active" id="tour-cam-btn" title="Toggle Camera Follow Mode">🎥 Follow: ON</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Subtitles Overlay Bar -->
+          <div class="tour-subtitles" id="tour-subtitles" style="display: none;"></div>
 
           <!-- Caption bar -->
           <div class="caption-bar" id="db-caption">Greenfield Smart Academy – 3D BLE Beacon Attendance Digital Twin</div>
@@ -721,11 +753,74 @@
     </div>
   </div>
 
+  <!-- =====================================================================
+       WELCOME SCREEN MODAL
+  ====================================================================== -->
+  <div class="welcome-modal-backdrop" id="welcome-modal">
+    <div class="welcome-card">
+      <div class="welcome-header">
+        <div class="welcome-tag">🏫 GREENFIELD SMART ACADEMY · 3D DIGITAL TWIN</div>
+        <h2>Welcome to the Smart School Attendance and Indoor Tracking Simulation</h2>
+        <p>An integrated interactive campus demonstration featuring automated BLE beacon indoor location tracking, period-based attendance (09:00 AM – 10:00 AM), biometric face verification, central library dwell logging, and live administrative analytics.</p>
+      </div>
+
+      <div class="welcome-features">
+        <div class="wf-item">
+          <span class="wf-icon">🎙</span>
+          <div>
+            <strong>Interactive 3D Virtual Presenter</strong>
+            <span>Realistic human tour guide walking corridors & physical classroom doors</span>
+          </div>
+        </div>
+        <div class="wf-item">
+          <span class="wf-icon">📡</span>
+          <div>
+            <strong>Classroom BLE Beacons</strong>
+            <span>Dedicated transmitters with calibrated RSSI log-distance path loss</span>
+          </div>
+        </div>
+        <div class="wf-item">
+          <span class="wf-icon">👤</span>
+          <div>
+            <strong>120 Seated Student Avatars</strong>
+            <span>Procedural face canvases, uniforms, and dynamic natural eye blinking</span>
+          </div>
+        </div>
+        <div class="wf-item">
+          <span class="wf-icon">📱</span>
+          <div>
+            <strong>Student Attendance App</strong>
+            <span>Proximity-verified punch-in with camera biometric face guide</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="welcome-actions">
+        <button class="w-btn primary" id="welcome-start-tour">
+          <span class="btn-icon">🎙▶</span>
+          <span>Start Guided Tour</span>
+        </button>
+        <button class="w-btn secondary" id="welcome-manual">
+          <span class="btn-icon">🧭</span>
+          <span>Explore School Manually</span>
+        </button>
+        <button class="w-btn secondary" id="welcome-dashboard">
+          <span class="btn-icon">📊</span>
+          <span>Open Attendance Dashboard</span>
+        </button>
+        <button class="w-btn secondary" id="welcome-app">
+          <span class="btn-icon">📱</span>
+          <span>Open Student Attendance App</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notifications -->
   <div class="db-toast" id="db-toast"></div>
 
   <!-- =======================================================================
-       SCRIPTS – (Order: Three.js, OrbitControls, Config, Engine, Scene, Dashboard, Main)
+       SCRIPTS – (Order: Three.js, OrbitControls, Config, Engine, Scene, Dashboard, Presenter, Main)
   ====================================================================== -->
   <script src="js/lib/three.min.js"></script>
   <script>
@@ -745,6 +840,7 @@
   <script src="js/school-engine.js"></script>
   <script src="js/school-scene.js"></script>
   <script src="js/school-dashboard.js"></script>
+  <script src="js/school-presenter.js"></script>
 
   <!-- Inline Signal Sliders Hook -->
   <script>

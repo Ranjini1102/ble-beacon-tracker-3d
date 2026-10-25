@@ -157,6 +157,11 @@
     // 3D scene render (every frame)
     SchoolScene.render(dt, now/1000);
 
+    // 3D Virtual Presenter update
+    if (window.SchoolPresenter && SchoolPresenter.update) {
+      SchoolPresenter.update(dt, now/1000);
+    }
+
     // Dashboard update (lower frequency)
     dashAccum += dt;
     if(dashAccum >= 0.35) {
@@ -172,8 +177,11 @@
   SchoolEngine.init();
   SchoolScene.init(document.getElementById('canvas-host'));
   SchoolDashboard.init(handlers);
+  if (window.SchoolPresenter && SchoolPresenter.init) {
+    SchoolPresenter.init();
+  }
   SchoolDashboard.setStatus('idle');
-  SchoolDashboard.showToast('🏫 3D Smart School loaded — click ▶ Start or press F to explore!','success');
+  SchoolDashboard.showToast('🏫 3D Smart School loaded — Welcome Tour Guide ready!','success');
 
   requestAnimationFrame(frame);
 
