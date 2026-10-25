@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "name": "ble-beacon-tracker-3d",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/", "destination": "/ble-beacon-tracker/index.html" }
+  ]
+}
