@@ -5,6 +5,8 @@ An integrated 3D Smart School BLE Beacon Indoor Location Tracking and Period-Bas
 ## 🚀 Quick Start
 we deployed using vercel
 kindly access using this link
+
+
 ble-beacon-tracker-3d-ble-beacon-tr.vercel.app
 
 1. Open `ble-beacon-tracker/index.html` in any web browser.
