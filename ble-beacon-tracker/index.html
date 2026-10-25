@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3D Smart School – BLE Beacon Attendance & Indoor Tracking</title>
+  <meta name="description" content="Realistic 3D Smart School simulation with Student Attendance App, Live Admin Dashboard, Period-Based Attendance (9:00-10:00 AM), BLE Tracking, Face Verification, and Library Sessions.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/school-style.css">
+</head>
+<body>
+
+  <!-- =====================================================================
+       TOP BAR & MASTER NAVIGATION
+  ====================================================================== -->
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 36 36" aria-hidden="true">
+        <circle cx="18" cy="18" r="3.5" fill="currentColor"/>
+        <path d="M10 10a11.3 11.3 0 0 0 0 16M26 10a11.3 11.3 0 0 1 0 16M5 5a18 18 0 0 0 0 26M31 5a18 18 0 0 1 0 26"
+              fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <h1>GREENFIELD SMART ACADEMY</h1>
+        <p>3D BLE Beacon Attendance System · Digital Twin</p>
+      </div>
+    </div>
+
+    <!-- 4 Primary Application Navigation Tabs -->
+    <nav class="nav-views" id="nav-views" aria-label="Main Navigation">
+      <button class="nav-tab active" data-view="simulation">
+        <span class="nav-icon">🏫</span>
+        <span class="nav-text">3D Simulation</span>
+      </button>
+      <button class="nav-tab" data-view="student-app">
+        <span class="nav-icon">📱</span>
+        <span class="nav-text">Student Attendance App</span>
+      </button>
+      <button class="nav-tab" data-view="admin-dashboard">
+        <span class="nav-icon">📊</span>
+        <span class="nav-text">Admin Dashboard</span>
+      </button>
+      <button class="nav-tab" data-view="library">
+        <span class="nav-icon">📚</span>
+        <span class="nav-text">Library Monitoring</span>
+      </button>
+    </nav>
+
+    <!-- Topbar Right Utilities & Simulation Clock -->
+    <div class="topbar-right">
+      <div class="period-pill" id="top-period-pill" title="Period 1 Attendance Window: 09:00 AM – 10:00 AM">
+        <span class="pulse-dot"></span>
+        <span id="top-period-text">Period 1 (09:00–10:00 AM)</span>
+      </div>
+
+      <div class="db-clock-wrap">
+        <div class="db-clock" id="db-clock">09:00 AM</div>
+      </div>
+
+      <div class="time-presets" title="Jump to different attendance lifecycle states">
+        <button class="preset-btn" data-time="8,50" title="Before 09:00 AM: Attendance Not Started">08:50</button>
+        <button class="preset-btn active" data-time="9,10" title="09:00–10:00 AM: Attendance Session Active">09:10</button>
+        <button class="preset-btn" data-time="9,50" title="09:50 AM: Approaching Deadline">09:50</button>
+        <button class="preset-btn" data-time="10,5" title="At/After 10:00 AM: Session Closed, Absences Finalized">10:05</button>
+      </div>
+
+      <div class="sim-chip" title="All BLE signals are mathematically modelled. No Bluetooth hardware required.">
+        <span class="sim-dot"></span>Simulated BLE
+      </div>
+      <div class="room-chip" id="db-current-room">Corridor</div>
+      <span class="fps-chip" id="db-fps">60 fps</span>
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       MAIN VIEW CONTAINER (4 Integrated Pages)
+  ====================================================================== -->
+  <main class="views-container">
+
+    <!-- ===================================================================
+         VIEW 1: 3D SCHOOL SIMULATION
+    ==================================================================== -->
+    <section class="page-view active" id="view-simulation">
+      <div class="sim-layout">
+
+        <!-- 3D Viewport -->
+        <div class="viewport" id="viewport">
+          <div id="canvas-host"></div>
+
+          <!-- Camera controls overlay -->
+          <div class="overlay top-right cam-dock">
+            <div class="seg-group" role="group" aria-label="Camera presets">
+              <button data-shot="overview" onclick="SchoolScene.enterOverview()" class="active">🏫 Campus</button>
+              <button data-shot="10A"  onclick="SchoolScene.enterFPS('10A')">10-A</button>
+              <button data-shot="10B"  onclick="SchoolScene.enterFPS('10B')">10-B</button>
+              <button data-shot="10C"  onclick="SchoolScene.enterFPS('10C')">10-C</button>
+              <button data-shot="9A"   onclick="SchoolScene.enterFPS('9A')">9-A</button>
+              <button data-shot="9B"   onclick="SchoolScene.enterFPS('9B')">9-B</button>
+              <button data-shot="9C"   onclick="SchoolScene.enterFPS('9C')">9-C</button>
+              <button data-shot="LIB"  onclick="SchoolScene.enterFPS('LIB')">📚 Library</button>
+              <button data-shot="CORR" onclick="SchoolScene.enterFPS('CORR')">🚶 Walk</button>
+            </div>
+            <button id="enter-fps-btn" class="fps-enter-btn">🚶 Walk School (FPS)</button>
+          </div>
+
+          <!-- Caption bar -->
+          <div class="caption-bar" id="db-caption">Greenfield Smart Academy – 3D BLE Beacon Attendance Digital Twin</div>
+
+          <!-- Hints and Disclaimers -->
+          <div class="overlay bottom-left view-hint-bar" id="view-hint">
+            Drag to orbit · Scroll to zoom · Click student to zoom in on face · Click room to enter
+          </div>
+          <div class="overlay bottom-right disclaimer-bar">
+            Simulated Path-loss BLE RSSI · Wall Attenuation 12 dB · Biometric Face Verification Simulated
+          </div>
+        </div>
+
+        <!-- 3D Sidebar Controls -->
+        <aside class="sidebar">
+          <!-- Simulation controls -->
+          <section class="db-card sim-card">
+            <div class="card-head">
+              <h2>Simulation Engine Controls</h2>
+              <span id="db-status-pill" class="db-pill idle">◉ Ready</span>
+            </div>
+            <div class="btn-row">
+              <button id="db-start"       class="db-btn primary" type="button">▶ Start</button>
+              <button id="db-pause"       class="db-btn"         type="button" disabled>⏸ Pause</button>
+              <button id="db-reset"       class="db-btn"         type="button">↺ Reset</button>
+              <button id="db-next-period" class="db-btn secondary small" type="button">⏭ Next Period</button>
+            </div>
+            <div class="speed-row">
+              <label for="db-speed">Speed</label>
+              <input type="range" id="db-speed" min="1" max="120" step="1" value="30">
+              <output id="db-speed-out">30x</output>
+            </div>
+          </section>
+
+          <!-- Today's Timetable -->
+          <section class="db-card" style="padding:9px">
+            <div class="card-head" style="margin-bottom:5px"><h2>Period Timetable (Period 1: Attendance)</h2></div>
+            <div id="db-period-bar" class="period-bar"></div>
+          </section>
+
+          <!-- Quick room navigation -->
+          <section class="db-card" style="padding:9px">
+            <div class="card-head" style="margin-bottom:6px"><h2>Classrooms & Beacons</h2></div>
+            <div class="room-grid">
+              <button class="room-btn" data-room="10A" style="border-color:#38bdf844;color:#38bdf8">
+                Class 10-A<div class="room-btn-sub">BCN-10A</div>
+              </button>
+              <button class="room-btn" data-room="10B" style="border-color:#facc1544;color:#facc15">
+                Class 10-B<div class="room-btn-sub">BCN-10B</div>
+              </button>
+              <button class="room-btn" data-room="10C" style="border-color:#4ade8044;color:#4ade80">
+                Class 10-C<div class="room-btn-sub">BCN-10C</div>
+              </button>
+              <button class="room-btn" data-room="9A" style="border-color:#f472b644;color:#f472b6">
+                Class 9-A<div class="room-btn-sub">BCN-9A</div>
+              </button>
+              <button class="room-btn" data-room="9B" style="border-color:#c084fc44;color:#c084fc">
+                Class 9-B<div class="room-btn-sub">BCN-9B</div>
+              </button>
+              <button class="room-btn" data-room="9C" style="border-color:#fb923c44;color:#fb923c">
+                Class 9-C<div class="room-btn-sub">BCN-9C</div>
+              </button>
+              <button class="room-btn" data-room="LIB" style="border-color:#67e8f944;color:#67e8f9;grid-column:span 2">
+                📚 Central Library<div class="room-btn-sub">BCN-LIB · Session Manager</div>
+              </button>
+            </div>
+          </section>
+
+          <!-- Tab Bar inside sidebar -->
+          <div id="tab-bar" class="tab-bar"></div>
+
+          <!-- OVERVIEW TAB -->
+          <div class="tab-pane active" data-pane="overview">
+            <section class="db-card">
+              <div class="ov-grid">
+                <div class="ov-stat blue">
+                  <div class="ov-num" id="ov-total">120</div>
+                  <div class="ov-label">Enrolled</div>
+                </div>
+                <div class="ov-stat green">
+                  <div class="ov-num" id="ov-present">0</div>
+                  <div class="ov-label">Present</div>
+                </div>
+                <div class="ov-stat orange">
+                  <div class="ov-num" id="ov-not-marked">120</div>
+                  <div class="ov-label">Not Marked</div>
+                </div>
+                <div class="ov-stat red">
+                  <div class="ov-num" id="ov-absent">0</div>
+                  <div class="ov-label">Absent</div>
+                </div>
+                <div class="ov-stat purple">
+                  <div class="ov-num" id="ov-beacons">9</div>
+                  <div class="ov-label">Beacons</div>
+                </div>
+                <div class="ov-stat yellow">
+                  <div class="ov-num" id="ov-pct">0%</div>
+                  <div class="ov-label">Attendance %</div>
+                </div>
+              </div>
+              <div class="si-row"><span class="k">Active Period</span><span class="v" id="ov-period">Period 1 – Mathematics</span></div>
+              <div class="si-row"><span class="k">Session Status</span><span class="v" id="ov-session-status">Active (Closes 10:00 AM)</span></div>
+              <div class="prog-bar"><div class="prog-fill" id="ov-prog-fill" style="width:0%"></div></div>
+            </section>
+            <section class="db-card">
+              <div class="card-head"><h2>Live Campus Floor Plan</h2></div>
+              <canvas id="db-minimap" class="db-minimap"></canvas>
+            </section>
+          </div>
+
+          <!-- CLASSROOM ROSTER TAB -->
+          <div class="tab-pane" data-pane="classroom">
+            <section class="db-card">
+              <div class="cm-header" id="cm-class-info"></div>
+              <div id="cm-class-tabs" class="cm-class-tabs"></div>
+              <div class="table-wrap" style="max-height:220px;overflow-y:auto">
+                <table class="db-table">
+                  <thead>
+                    <tr>
+                      <th></th><th>Name</th><th>Roll</th><th>RSSI</th>
+                      <th>Conf.</th><th>Status</th><th>Punch-in</th><th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cm-tbody">
+                    <tr><td colspan="8" class="muted" style="padding:14px">Loading students…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <section class="db-card">
+              <div class="card-head"><h2>Selected Student Profile</h2></div>
+              <div id="cm-student-detail">
+                <p class="muted" style="padding:8px 0">Click a student in the table or tap a student avatar in the 3D scene.</p>
+              </div>
+            </section>
+          </div>
+
+          <!-- BEACONS TAB -->
+          <div class="tab-pane" data-pane="beacons">
+            <section class="db-card">
+              <div class="card-head"><h2>Beacon Hardware Grid</h2></div>
+              <div id="db-beacon-grid" class="beacon-grid"></div>
+            </section>
+            <section class="db-card">
+              <div class="card-head"><h2>RF Signal Simulation Parameters</h2></div>
+              <div style="display:flex;flex-direction:column;gap:9px">
+                <div class="speed-row">
+                  <label>Path Loss n</label>
+                  <input type="range" id="sl-n" min="1.5" max="4" step="0.1" value="2.8">
+                  <output id="out-n">2.8</output>
+                </div>
+                <div class="speed-row">
+                  <label>Wall Atten.</label>
+                  <input type="range" id="sl-wall" min="2" max="20" step="1" value="12">
+                  <output id="out-wall">12 dB</output>
+                </div>
+                <div class="speed-row">
+                  <label>Noise σ</label>
+                  <input type="range" id="sl-noise" min="0" max="10" step="0.5" value="2.5">
+                  <output id="out-noise">2.5 dB</output>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <!-- Disclaimer notice -->
+          <section class="db-card notice-card" style="margin-top:auto">
+            <h2>⚠️ Educational Demonstration Mode</h2>
+            <p>All BLE RSSI values, presence coordinates, and face-verification biometric scores are generated by mathematical models. No hardware Bluetooth or camera data is harvested.</p>
+          </section>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         VIEW 2: STUDENT ATTENDANCE APP (Mobile Responsive App)
+    ==================================================================== -->
+    <section class="page-view" id="view-student-app">
+      <div class="student-app-container">
+
+        <!-- Mobile Device Frame -->
+        <div class="mobile-phone-frame">
+          <div class="phone-speaker"></div>
+
+          <!-- Student App Screen -->
+          <div class="phone-screen">
+            <!-- App Header -->
+            <div class="app-header">
+              <div class="app-logo">
+                <span class="app-logo-badge">🏫</span>
+                <div>
+                  <div class="app-title">Greenfield Academy</div>
+                  <div class="app-subtitle">Student Attendance Portal</div>
+                </div>
+              </div>
+              <div class="app-time-chip" id="app-clock-display">09:00 AM</div>
+            </div>
+
+            <!-- Student Picker for Demonstration -->
+            <div class="app-student-selector-box">
+              <label for="app-student-select">Select Student (Demonstration Mode)</label>
+              <select id="app-student-select" class="app-select">
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+
+            <div class="app-content-scroll">
+              <!-- Student Profile Card -->
+              <div class="app-card student-profile-card">
+                <div class="sp-avatar-box">
+                  <div class="sp-avatar" id="app-student-avatar">A</div>
+                  <span class="sp-online-dot" id="app-online-dot"></span>
+                </div>
+                <div class="sp-info">
+                  <div class="sp-name" id="app-student-name">Aarav Sharma</div>
+                  <div class="sp-id" id="app-student-id">10A-S001 · Roll: 202410A001</div>
+                  <div class="sp-class" id="app-student-class">Class: <strong>10-A</strong> · Seat: <strong>Desk 1-1</strong></div>
+                </div>
+              </div>
+
+              <!-- Period Status & Schedule -->
+              <div class="app-card period-info-card">
+                <div class="pic-header">
+                  <span class="pic-badge">Period 1</span>
+                  <span class="pic-time">09:00 AM – 10:00 AM</span>
+                </div>
+                <div class="pic-subject" id="app-period-subject">Mathematics (Algebra & Geometry)</div>
+                <div class="pic-status-row">
+                  <span class="pic-label">Attendance Window:</span>
+                  <span class="pic-status-pill" id="app-period-pill">Active</span>
+                </div>
+                <div class="pic-msg" id="app-period-msg">Session closes at 10:00 AM. Punch in now.</div>
+              </div>
+
+              <!-- Classroom BLE Beacon Telemetry Card -->
+              <div class="app-card beacon-telemetry-card">
+                <div class="btc-header">
+                  <span class="btc-title">Classroom Beacon Proximity</span>
+                  <span class="btc-pulse-wrap">
+                    <span class="btc-pulse-ring"></span>
+                    <span class="btc-pulse-dot"></span>
+                  </span>
+                </div>
+
+                <div class="btc-grid">
+                  <div class="btc-item">
+                    <span class="btc-k">Assigned Beacon</span>
+                    <span class="btc-v mono green" id="app-bcn-id">BCN-10A</span>
+                  </div>
+                  <div class="btc-item">
+                    <span class="btc-k">Detection Status</span>
+                    <span class="btc-v" id="app-bcn-status">In Classroom</span>
+                  </div>
+                  <div class="btc-item">
+                    <span class="btc-k">Signal Strength</span>
+                    <span class="btc-v mono" id="app-bcn-rssi">-54 dBm</span>
+                  </div>
+                  <div class="btc-item">
+                    <span class="btc-k">Signal Quality</span>
+                    <span class="btc-v" id="app-bcn-quality">Strong (96%)</span>
+                  </div>
+                </div>
+
+                <!-- Signal Level Bar -->
+                <div class="signal-bar-track">
+                  <div class="signal-bar-fill" id="app-signal-bar" style="width: 88%;"></div>
+                </div>
+
+                <div class="btc-footer">
+                  <span class="btc-hint" id="app-telemetry-hint">Continuous BLE signal monitoring active.</span>
+                  <span class="btc-last-seen" id="app-last-seen">09:00 AM</span>
+                </div>
+              </div>
+
+              <!-- Attendance Status & Action Card -->
+              <div class="app-card punch-action-card">
+                <div class="pac-header">
+                  <span class="pac-title">Today's Attendance</span>
+                  <span class="status-badge" id="app-attendance-badge">NOT MARKED</span>
+                </div>
+
+                <!-- Punch-in Receipt (visible if punched) -->
+                <div class="punch-receipt" id="app-punch-receipt" style="display:none">
+                  <div class="pr-icon">✅</div>
+                  <div class="pr-title">Attendance Confirmed</div>
+                  <div class="pr-time" id="app-punch-time">Marked at 09:12 AM</div>
+                  <div class="pr-score" id="app-punch-score">Face Biometric Verified: 97.4% match</div>
+                  <div class="pr-code" id="app-punch-hash">Ref: ACK-2024-10A-S001-P1</div>
+                </div>
+
+                <!-- Punch In Button -->
+                <button class="app-punch-btn" id="app-punch-button">
+                  <span class="apb-icon">📷</span>
+                  <span class="apb-text" id="app-punch-text">Punch In (Face Verification)</span>
+                </button>
+                <div class="pac-notes" id="app-pac-notes">Requires classroom beacon in range + face verification.</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Explanatory Side Panel for App View -->
+        <div class="app-guide-panel">
+          <h2>Student Attendance App Workflow</h2>
+          <p>This page emulates the student mobile application used on campus. Students mark attendance each period via their device while inside the classroom.</p>
+
+          <div class="guide-steps">
+            <div class="g-step">
+              <div class="g-num">1</div>
+              <div>
+                <strong>Period Schedule Check (09:00–10:00 AM)</strong>
+                <p>Before 09:00 AM, punch-in is disabled with "Attendance Not Started". From 09:00 to 10:00 AM, the session is active. At 10:00 AM, new punch-ins lock and unpunched students finalize as Absent.</p>
+              </div>
+            </div>
+
+            <div class="g-step">
+              <div class="g-num">2</div>
+              <div>
+                <strong>Classroom Beacon Proximity Validation</strong>
+                <p>Device continuously monitors BLE packets from the classroom's dedicated ceiling beacon (e.g. <code>BCN-10A</code>). Students cannot mark attendance from other rooms.</p>
+              </div>
+            </div>
+
+            <div class="g-step">
+              <div class="g-num">3</div>
+              <div>
+                <strong>Face Biometric Verification</strong>
+                <p>Clicking "Punch In" triggers the face verification camera preview. The biometric model verifies the face and records the timestamp.</p>
+              </div>
+            </div>
+
+            <div class="g-step">
+              <div class="g-num">4</div>
+              <div>
+                <strong>Instant System Synchronization</strong>
+                <p>Punching in immediately updates the 3D classroom scene, the Admin Dashboard, classroom summaries, and the student's status ring.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-quick-tools">
+            <h3>Quick Testing Presets</h3>
+            <div class="btn-row">
+              <button class="db-btn secondary small" onclick="SchoolDashboard.jumpSimTime(8,55)">Jump to 08:55 AM (Before)</button>
+              <button class="db-btn secondary small" onclick="SchoolDashboard.jumpSimTime(9,15)">Jump to 09:15 AM (Active)</button>
+              <button class="db-btn secondary small" onclick="SchoolDashboard.jumpSimTime(10,5)">Jump to 10:05 AM (Closed)</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         VIEW 3: LIVE ADMIN ATTENDANCE DASHBOARD
+    ==================================================================== -->
+    <section class="page-view" id="view-admin-dashboard">
+      <div class="admin-dashboard-layout">
+
+        <!-- Top Header & Actions -->
+        <div class="admin-header">
+          <div>
+            <h1 class="admin-title">Live Admin Attendance Dashboard</h1>
+            <p class="admin-subtitle">Real-time BLE beacon monitoring, period tracking, and student attendance roster</p>
+          </div>
+          <div class="admin-actions">
+            <button class="db-btn small secondary" id="admin-auto-punch-btn">⚡ Demo Auto-Punch Class</button>
+            <button class="db-btn small secondary" id="admin-export-btn">📥 Export CSV</button>
+            <button class="db-btn small" onclick="window.print()">🖨 Print Report</button>
+          </div>
+        </div>
+
+        <!-- KPI Cards Grid (White-and-Green Aesthetic) -->
+        <div class="admin-kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Enrolled</div>
+            <div class="kpi-val" id="kpi-total">120</div>
+            <div class="kpi-sub">6 Classrooms · 20/class</div>
+          </div>
+
+          <div class="kpi-card green-highlight">
+            <div class="kpi-label">Present (Punched In)</div>
+            <div class="kpi-val green" id="kpi-present">0</div>
+            <div class="kpi-sub" id="kpi-present-pct">0% of total</div>
+          </div>
+
+          <div class="kpi-card yellow-highlight">
+            <div class="kpi-label">Not Yet Marked</div>
+            <div class="kpi-val yellow" id="kpi-not-marked">120</div>
+            <div class="kpi-sub">Pending verification</div>
+          </div>
+
+          <div class="kpi-card red-highlight">
+            <div class="kpi-label">Finalized Absent</div>
+            <div class="kpi-val red" id="kpi-absent">0</div>
+            <div class="kpi-sub" id="kpi-absent-sub">Finalized after 10:00 AM</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label">Face Verified</div>
+            <div class="kpi-val green" id="kpi-face-ok">0</div>
+            <div class="kpi-sub">Biometrics Confirmed</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label">Face Pending / Failed</div>
+            <div class="kpi-val muted" id="kpi-face-pending">120</div>
+            <div class="kpi-sub">Awaiting verification</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label">Signal Lost / Out of Zone</div>
+            <div class="kpi-val orange" id="kpi-signal-lost">0</div>
+            <div class="kpi-sub">&lt; -85 dBm or wall blocked</div>
+          </div>
+
+          <div class="kpi-card period-card">
+            <div class="kpi-label">Period 1 Countdown</div>
+            <div class="kpi-val mono" id="kpi-countdown">--:--</div>
+            <div class="kpi-sub" id="kpi-period-status-text">Active (Closes 10:00 AM)</div>
+          </div>
+        </div>
+
+        <!-- Classroom Attendance Summary Cards -->
+        <div class="admin-section-head">
+          <h2>Classroom Attendance Summaries</h2>
+          <span class="muted">Click any classroom to filter the master table</span>
+        </div>
+
+        <div class="classroom-cards-grid" id="admin-class-cards">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- Master Student Table with Filters -->
+        <div class="admin-section-head" style="margin-top:18px">
+          <h2>Master Student Attendance Roster</h2>
+          <div class="table-filters-row">
+            <!-- Class filter -->
+            <select id="filter-class" class="filter-select">
+              <option value="ALL">All Classes (120)</option>
+              <option value="10A">Class 10-A (BCN-10A)</option>
+              <option value="10B">Class 10-B (BCN-10B)</option>
+              <option value="10C">Class 10-C (BCN-10C)</option>
+              <option value="9A">Class 9-A (BCN-9A)</option>
+              <option value="9B">Class 9-B (BCN-9B)</option>
+              <option value="9C">Class 9-C (BCN-9C)</option>
+            </select>
+
+            <!-- Status filter -->
+            <select id="filter-status" class="filter-select">
+              <option value="ALL">All Statuses</option>
+              <option value="PRESENT">PRESENT</option>
+              <option value="NOT_MARKED">NOT MARKED</option>
+              <option value="ABSENT">ABSENT</option>
+              <option value="SIGNAL_LOST">SIGNAL LOST</option>
+            </select>
+
+            <!-- Search box -->
+            <input type="text" id="filter-search" class="filter-input" placeholder="Search by name, ID, or roll number…">
+          </div>
+        </div>
+
+        <!-- Master Table Container -->
+        <div class="admin-table-container">
+          <table class="master-table">
+            <thead>
+              <tr>
+                <th style="width:36px"></th>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Class</th>
+                <th>Assigned Beacon</th>
+                <th>Face Verification</th>
+                <th>Punch-in Time</th>
+                <th>Attendance Status</th>
+                <th>Latest RSSI</th>
+                <th>Last Seen</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-master-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         VIEW 4: LIBRARY MONITORING & SESSION MANAGER
+    ==================================================================== -->
+    <section class="page-view" id="view-library">
+      <div class="library-page-layout">
+        <div class="library-header">
+          <div>
+            <h1>Central Library & Learning Commons Tracking</h1>
+            <p>Separate library sessions linked to permanent Student IDs (Classroom attendance is preserved)</p>
+          </div>
+          <div class="lib-beacon-badge">
+            <span class="lib-dot"></span>
+            <span>Zone Beacon: <strong>BCN-LIB</strong> · Major 3 / Minor 1</span>
+          </div>
+        </div>
+
+        <!-- Library Stats Grid -->
+        <div class="lib-kpi-grid">
+          <div class="lib-card">
+            <div class="lib-card-label">Current Readers</div>
+            <div class="lib-card-val" id="lib-active-count">6</div>
+            <div class="lib-card-sub">Active Library Sessions</div>
+          </div>
+          <div class="lib-card">
+            <div class="lib-card-label">Available Desks</div>
+            <div class="lib-card-val" id="lib-available-count">18</div>
+            <div class="lib-card-sub">Total Capacity: 24 Seats</div>
+          </div>
+          <div class="lib-card">
+            <div class="lib-card-label">Zone Beacon RSSI</div>
+            <div class="lib-card-val mono" id="lib-beacon-rssi">-52 dBm</div>
+            <div class="lib-card-sub">Status: Strong Signal (BCN-LIB)</div>
+          </div>
+          <div class="lib-card">
+            <div class="lib-card-label">Occupancy Rate</div>
+            <div class="lib-card-val" id="lib-occupancy-pct">25%</div>
+            <div class="lib-card-sub">Quiet Study Zone</div>
+          </div>
+        </div>
+
+        <!-- Active Sessions Table -->
+        <div class="admin-section-head" style="margin-top:16px">
+          <h2>Active Library Occupants & Session IDs</h2>
+        </div>
+
+        <div class="admin-table-container">
+          <table class="master-table">
+            <thead>
+              <tr>
+                <th>Student Name</th>
+                <th>Permanent Student ID</th>
+                <th>Class</th>
+                <th>Unique Library Session ID</th>
+                <th>Check-in Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="library-sessions-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =====================================================================
+       FACE VERIFICATION CAMERA MODAL (SIMULATED BIOMETRICS)
+  ====================================================================== -->
+  <div class="modal-backdrop" id="face-modal" style="display:none">
+    <div class="face-modal-content">
+      <div class="fm-header">
+        <div class="fm-title">Student Face Verification</div>
+        <button class="fm-close-btn" id="face-modal-close">&times;</button>
+      </div>
+
+      <!-- Camera Viewfinder -->
+      <div class="camera-viewfinder">
+        <!-- Animated Scanner Line -->
+        <div class="scanner-laser" id="fm-laser"></div>
+
+        <!-- Facial Alignment Oval -->
+        <div class="face-target-oval">
+          <div class="corner top-left"></div>
+          <div class="corner top-right"></div>
+          <div class="corner bottom-left"></div>
+          <div class="corner bottom-right"></div>
+        </div>
+
+        <!-- Simulated Landmark Dots -->
+        <div class="landmark-points-container" id="fm-landmarks"></div>
+
+        <!-- Simulated Student Video Avatar -->
+        <div class="camera-stream-avatar" id="fm-avatar-placeholder">
+          <div class="stream-initial" id="fm-initial">A</div>
+        </div>
+
+        <!-- Verification Result Banner Overlay -->
+        <div class="scan-status-overlay" id="fm-scan-status">
+          <div class="sso-text">🔍 Align face within frame…</div>
+        </div>
+      </div>
+
+      <!-- Face Details & Match Score -->
+      <div class="fm-details">
+        <div class="fm-student-name" id="fm-student-name">Aarav Sharma</div>
+        <div class="fm-meta" id="fm-student-meta">ID: 10A-S001 · Class 10-A · BCN-10A Validated</div>
+
+        <div class="fm-score-row">
+          <span>Biometric Match Confidence:</span>
+          <strong id="fm-score-text">Scanning…</strong>
+        </div>
+
+        <div class="fm-disclaimer">
+          🔒 <strong>Simulated Biometric Verification:</strong> Educational demonstration model with random confidence scores. No personal biometric or camera imagery is permanently stored.
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="fm-actions">
+        <button class="db-btn secondary" id="fm-cancel-btn">Cancel</button>
+        <button class="db-btn primary" id="fm-confirm-btn" disabled>Confirm & Mark Attendance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div class="db-toast" id="db-toast"></div>
+
+  <!-- =======================================================================
+       SCRIPTS – (Order: Three.js, OrbitControls, Config, Engine, Scene, Dashboard, Main)
+  ====================================================================== -->
+  <script src="js/lib/three.min.js"></script>
+  <script>
+    if (!window.THREE) {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"><\/script>');
+    }
+  </script>
+  <script src="js/lib/OrbitControls.js"></script>
+  <script>
+    if (window.THREE && !THREE.OrbitControls) {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"><\/script>');
+    }
+  </script>
+
+  <!-- School Application Modules -->
+  <script src="js/school-config.js"></script>
+  <script src="js/school-engine.js"></script>
+  <script src="js/school-scene.js"></script>
+  <script src="js/school-dashboard.js"></script>
+
+  <!-- Inline Signal Sliders Hook -->
+  <script>
+    var slN = document.getElementById('sl-n');
+    if (slN) {
+      slN.addEventListener('input', function() {
+        SIM.pathLoss = parseFloat(this.value);
+        document.getElementById('out-n').textContent = this.value;
+      });
+    }
+    var slW = document.getElementById('sl-wall');
+    if (slW) {
+      slW.addEventListener('input', function() {
+        SIM.wallAtten = parseFloat(this.value);
+        document.getElementById('out-wall').textContent = this.value + ' dB';
+      });
+    }
+    var slNoise = document.getElementById('sl-noise');
+    if (slNoise) {
+      slNoise.addEventListener('input', function() {
+        SIM.noiseStd = parseFloat(this.value);
+        document.getElementById('out-noise').textContent = this.value + ' dB';
+      });
+    }
+  </script>
+
+  <!-- Main Orchestrator -->
+  <script src="js/school-main.js"></script>
+</body>
+</html>
